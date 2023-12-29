@@ -41,18 +41,45 @@ export const getPostOne = async (req, res) => {
 export const removePost = async (req, res) => {
 	try {
 		const postId = req.params.id
-        PostModel.findOneAndDelete({_id: postId}).then((doc) => {
-        if (!doc) {
-          return res.status(404).json({
-            message: "Не удалось удалить",
-          });
-        }
+		PostModel.findOneAndDelete({ _id: postId }).then(doc => {
+			if (!doc) {
+				return res.status(404).json({
+					message: 'Не удалось удалить',
+				})
+			}
 
-        res.json(doc);
-      })} catch (err) {
+			res.json(doc)
+		})
+	} catch (err) {
 		console.log(err)
 		res.status(500).json({
 			message: 'Не удалось удалить',
+		})
+	}
+}
+export const updatePost = async (req, res) => {
+	try {
+		const postId = req.params.id
+		await PostModel.updateOne(
+			{
+				_id: postId,
+			},
+			{
+				title: req.body.title,
+				text: req.body.text,
+				imageUrl: req.body.imageUrl,
+				user: req.userId,
+				tags: req.body.tags,
+			}
+		)
+
+		res.json({
+			success: true,
+		})
+	} catch (err) {
+		console.log(err)
+		res.status(500).json({
+			message: 'Обновить не удалось',
 		})
 	}
 }

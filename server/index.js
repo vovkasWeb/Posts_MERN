@@ -1,14 +1,10 @@
 import express, { json } from 'express'
 import mongoose from 'mongoose'
+import multer from 'multer'
 
-import {
-	registerValidation,
-	loginValidation,
-	postCreateValidation,
-} from './validations.js'
-import cheackAuth from './utils/cheackAuth.js'
-import { getMe, login, register } from './conrollers/UserController.js'
-import { createPost, getPostAll,getPostOne,removePost } from './conrollers/PostController.js'
+import {registerValidation, loginValidation, postCreateValidation} from './validations.js'
+import {UserController,PostController} from './conrollers/index.js';
+import {cheackAuth,handleValidationErrors} from './utils/index.js'
 
 mongoose
 	.connect(
@@ -23,17 +19,35 @@ mongoose
 
 const app = express()
 
+const storage = multer.diskStorage({
+	destination: (_, __, cb) => {
+		cb(null, 'uploads')
+	},
+	filename: (_, file, cb) => {
+		cb(null, file.originalname)
+	},
+})
+
+const upload = multer({ storage })
+
 app.use(json())
+app.use('/uploads', express.static('uploads'))
 
-app.post('/auth/login', loginValidation, login)
-app.post('/auth/register', registerValidation, register)
-app.get('/auth/me', cheackAuth, getMe)
+app.post('/auth/login', loginValidation, handleValidationErrors, UserController.login)
+app.post('/auth/register', registerValidation, handleValidationErrors, UserController.register)
+app.get('/auth/me', cheackAuth, UserController.getMe)
 
-app.get('/posts', getPostAll)
-app.get('/posts/:id', getPostOne)
-app.post('/posts', cheackAuth, postCreateValidation, createPost)
-app.delete('/posts/:id',cheackAuth, removePost)
-//app.patch('/posts/:id',cheackAuth, updatePost)
+app.post('/upload', cheackAuth, upload.single('image'), (req, res) => {
+	res.json({
+		url: `/uploads/${req.file.originalname}`,
+	})
+})
+
+app.get('/posts', PostController.getPostAll)
+app.get('/posts/:id', PostController.getPostOne)
+app.post('/posts', cheackAuth, postCreateValidation,handleValidationErrors, PostController.createPost)
+app.delete('/posts/:id', cheackAuth, PostController.removePost)
+app.patch('/posts/:id', cheackAuth, postCreateValidation,handleValidationErrors, PostController.updatePost)
 
 app.listen(4444, err => {
 	if (err) {
