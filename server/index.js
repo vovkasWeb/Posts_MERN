@@ -1,6 +1,7 @@
 import express, { json } from 'express'
 import mongoose from 'mongoose'
 import multer from 'multer'
+import cors from 'cors'
 
 import {registerValidation, loginValidation, postCreateValidation} from './validations.js'
 import {UserController,PostController} from './conrollers/index.js';
@@ -31,6 +32,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage })
 
 app.use(json())
+app.use(cors())
 app.use('/uploads', express.static('uploads'))
 
 app.post('/auth/login', loginValidation, handleValidationErrors, UserController.login)
@@ -42,8 +44,9 @@ app.post('/upload', cheackAuth, upload.single('image'), (req, res) => {
 		url: `/uploads/${req.file.originalname}`,
 	})
 })
-
+app.get('/tags', PostController.getLastTags)
 app.get('/posts', PostController.getPostAll)
+app.get('/posts/tags', PostController.getLastTags)
 app.get('/posts/:id', PostController.getPostOne)
 app.post('/posts', cheackAuth, postCreateValidation,handleValidationErrors, PostController.createPost)
 app.delete('/posts/:id', cheackAuth, PostController.removePost)
