@@ -50,6 +50,7 @@ export const Home = () => {
 							/>
 						)
 					)}
+          
 				</Grid>
 				<Grid xs={4} item>
 					<TagsBlock items={tags.items} isLoading={isTagsLoading} />
